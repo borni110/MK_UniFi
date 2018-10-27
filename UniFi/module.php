@@ -1771,7 +1771,7 @@ class UniFi extends IPSModule {
                     if(!isset($client->name) AND isset($client->hostname))
                     {
                         $client->name = $client->hostname;
-                        $this->SendDebug("hostname", $client->hostname);
+                        $this->SendDebug("hostname", $client->hostname,0);
                         
                     }
                     if(!isset($client->name) AND !isset($client->hostname))
@@ -1798,7 +1798,7 @@ class UniFi extends IPSModule {
                     //Erste danach die aktuellen Werte eintragen
                     //rx_bytes und tx_Bytes müssen float sein, sonst entstehen falsche Werte bei Großen Downloadmengen, Grenze ist 2147483647
                     if (isset($client->tx_bytes)) $this->CreateVariable("TX Bytes", 2, $client->tx_bytes, $ident . "_txbytes", $catID);
-                    $this->SendDebug("tx_bytes", $client->tx_bytes);
+                    $this->SendDebug("tx_bytes", $client->tx_bytes,0);
                     if (isset($client->rx_bytes)) $this->CreateVariable("RX Bytes", 2, $client->rx_bytes, $ident . "_rxbytes", $catID);
                     if (isset($client->uptime)) $this->CreateVariable("Uptime", 1, $client->uptime, $ident . "_uptime", $catID, "~UnixTimestampTime");
                     if (isset($client->last_seen)) $this->CreateVariable("Last Seen", 1, $client->last_seen, $ident . "_last_seen", $catID, "~UnixTimestamp");
