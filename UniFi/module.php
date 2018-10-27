@@ -1794,8 +1794,9 @@ class UniFi extends IPSModule {
                     //Downloadrate berechnen
                     if (isset($client->tx_bytes)) $txrate=$this->CalculateRate("TX Bytes", $client->tx_bytes, $ident . "_txbytes", $catID);
                     //Erste danach die aktuellen Werte eintragen
-                    if (isset($client->tx_bytes)) $this->CreateVariable("TX Bytes", 1, $client->tx_bytes, $ident . "_txbytes", $catID);
-                    if (isset($client->rx_bytes)) $this->CreateVariable("RX Bytes", 1, $client->rx_bytes, $ident . "_rxbytes", $catID);
+                    //rx_bytes und tx_Bytes müssen float sein, sonst entstehen falsche Werte bei Großen Downloadmengen, Grenze ist 2147483647
+                    if (isset($client->tx_bytes)) $this->CreateVariable("TX Bytes", 2, $client->tx_bytes, $ident . "_txbytes", $catID);
+                    if (isset($client->rx_bytes)) $this->CreateVariable("RX Bytes", 2, $client->rx_bytes, $ident . "_rxbytes", $catID);
                     if (isset($client->uptime)) $this->CreateVariable("Uptime", 1, $client->uptime, $ident . "_uptime", $catID, "~UnixTimestampTime");
                     if (isset($client->last_seen)) $this->CreateVariable("Last Seen", 1, $client->last_seen, $ident . "_last_seen", $catID, "~UnixTimestamp");
                     if (isset($client->first_seen)) $this->CreateVariable("First Seen", 1, $client->first_seen, $ident . "_first_seen", $catID, "~UnixTimestamp");
@@ -1849,8 +1850,9 @@ class UniFi extends IPSModule {
                         $this->CreateVariable("Hostname", 3, $client->hostname, $ident . "_hostname", $catID);
 						if (!isset($client->tx_bytes) AND isset($client->{'wired-tx_bytes'})) $client->tx_bytes = $client->{'wired-tx_bytes'}; 
 						if (!isset($client->rx_bytes) AND isset($client->{'wired-rx_bytes'})) $client->rx_bytes = $client->{'wired-rx_bytes'};					
-                        $this->CreateVariable("TX Bytes", 1, $client->tx_bytes, $ident . "_txbytes", $catID);
-                        $this->CreateVariable("RX Bytes", 1, $client->rx_bytes, $ident . "_rxbytes", $catID);
+						//rx_bytes und tx_Bytes müssen float sein, sonst entstehen falsche Werte bei Großen Downloadmengen, Grenze ist 2147483647
+						$this->CreateVariable("TX Bytes", 2, $client->tx_bytes, $ident . "_txbytes", $catID);
+                        $this->CreateVariable("RX Bytes", 2, $client->rx_bytes, $ident . "_rxbytes", $catID);
                         $this->CreateVariable("Uptime", 1, $client->uptime, $ident . "_uptime", $catID, "~UnixTimestampTime");
                     }
                 }
