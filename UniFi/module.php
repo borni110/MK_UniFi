@@ -1656,7 +1656,7 @@ class UniFi extends IPSModule {
                 SetValueInteger($VarID, $Value);
                 break;
             case 2: // float
-                SetValueFloat($VarID, $Value);
+                SetValueFloat($VarID, (float) $Value);
                 $this->SendDebug("SetVariable", "Var: ". $VarID. "Wert: ". $Value,0);
                 break;
             case 3: // string
