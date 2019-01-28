@@ -1854,10 +1854,15 @@ class UniFi extends IPSModule {
                         $this->CreateVariable("Hostname", 3, $client->hostname, $ident . "_hostname", $catID);
 						if (!isset($client->tx_bytes) AND isset($client->{'wired-tx_bytes'})) $client->tx_bytes = $client->{'wired-tx_bytes'}; 
 						if (!isset($client->rx_bytes) AND isset($client->{'wired-rx_bytes'})) $client->rx_bytes = $client->{'wired-rx_bytes'};					
+						//Downloadrate berechnen
+						if (isset($client->tx_bytes)) $txrate=$this->CalculateRate("TX Bytes", $client->tx_bytes, $ident . "_txbytes", $catID);
+						//Erste danach die aktuellen Werte eintragen
 						//rx_bytes und tx_Bytes müssen float sein, sonst entstehen falsche Werte bei Großen Downloadmengen, Grenze ist 2147483647
 						$this->CreateVariable("TX Bytes", 2, $client->tx_bytes, $ident . "_txbytes", $catID);
+						$this->SendDebug("tx_bytes", $client->tx_bytes,0);
                         $this->CreateVariable("RX Bytes", 2, $client->rx_bytes, $ident . "_rxbytes", $catID);
                         $this->CreateVariable("Uptime", 1, $client->uptime, $ident . "_uptime", $catID, "~UnixTimestampTime");
+                        if (isset($txrate)) $this->CreateVariable("Downloadrate", 1, $txrate, $ident . "_txrate", $catID);
                     }
                 }
             }       
