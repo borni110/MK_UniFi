@@ -1656,8 +1656,7 @@ class UniFi extends IPSModule {
                 SetValueInteger($VarID, $Value);
                 break;
             case 2: // float
-                SetValueFloat($VarID, (float) $Value);
-                $this->SendDebug("SetVariable", "Var: ". $VarID. "Wert: ". $Value,0);
+                SetValueFloat($VarID, $Value);
                 break;
             case 3: // string
                 SetValueString($VarID, $Value);
@@ -1772,8 +1771,6 @@ class UniFi extends IPSModule {
                     if(!isset($client->name) AND isset($client->hostname))
                     {
                         $client->name = $client->hostname;
-                        $this->SendDebug("hostname", $client->hostname,0);
-                        
                     }
                     if(!isset($client->name) AND !isset($client->hostname))
                     {
@@ -1786,7 +1783,6 @@ class UniFi extends IPSModule {
                     }                     
                     $ident = str_replace(":", "", $client->mac);
                     $ident = str_replace("-", "", $ident);
-                    $this->ClientArrayOnline[] = $ident;
                     $catID = $this->CreateCategoryByIdent($instance_Clients_ID, $ident . "_name", $client->name);
                     if (isset($client->mac)) $this->CreateVariable("MAC", 3, $client->mac, $ident . "_mac", $catID);
                     if (isset($client->ap_mac)) $this->CreateVariable("Accesspoint MAC", 3, $client->ap_mac, $ident . "_ap_mac", $catID);
@@ -1797,12 +1793,33 @@ class UniFi extends IPSModule {
                     //Downloadrate berechnen
                     if (isset($client->tx_bytes)) $txrate=$this->CalculateRate("TX Bytes", $client->tx_bytes, $ident . "_txbytes", $catID);
                     //Erste danach die aktuellen Werte eintragen
-                    //rx_bytes und tx_Bytes müssen float sein, sonst entstehen falsche Werte bei Großen Downloadmengen, Grenze ist 2147483647
-                    if (isset($client->tx_bytes)) $this->CreateVariable("TX Bytes", 2, $client->tx_bytes, $ident . "_txbytes", $catID);
-                    $this->SendDebug("tx_bytes", $client->tx_bytes,0);
-                    if (isset($client->rx_bytes)) $this->CreateVariable("RX Bytes", 2, $client->rx_bytes, $ident . "_rxbytes", $catID);
+                    if (isset($client->tx_bytes)) $this->CreateVariable("TX Bytes", 1, $client->tx_bytes, $ident . "_txbytes", $catID);
+                    if (isset($client->rx_bytes)) $this->CreateVariable("RX Bytes", 1, $client->rx_bytes, $ident . "_rxbytes", $catID);
                     if (isset($client->uptime)) $this->CreateVariable("Uptime", 1, $client->uptime, $ident . "_uptime", $catID, "~UnixTimestampTime");
-                    if (isset($client->last_seen)) $this->CreateVariable("Last Seen", 1, $client->last_seen, $ident . "_last_seen", $catID, "~UnixTimestamp");
+                    if (isset($client->last_seen))
+					{
+						$this->CreateVariable("Last Seen", 1, $client->last_seen, $ident . "_last_seen", $catID, "~UnixTimestamp");
+						$var_now = time();
+						$var_timedifference = ($var_now - $client->last_seen)/60; //vergangene Minuten seit letztem Kontakt
+						if ($var_timedifference <= 30)
+							$this->ClientArrayOnline[] = $ident;
+					}
+					else
+					{
+						$this->ClientArrayOnline[] = $ident;
+					}
+                    if (isset($client->_last_seen_by_usw))
+					{
+						$this->CreateVariable("Last Seen by USG", 1, $client->_last_seen_by_usw, $ident . "_last_seen_usw", $catID, "~UnixTimestamp");
+						$var_now = time();
+						$var_timedifference = ($var_now - $client->_last_seen_by_usw)/60; //vergangene Minuten seit letztem Kontakt
+						if ($var_timedifference <= 30)
+							$this->ClientArrayOnline[] = $ident;
+					}
+					else
+					{
+						$this->ClientArrayOnline[] = $ident;
+					}					
                     if (isset($client->first_seen)) $this->CreateVariable("First Seen", 1, $client->first_seen, $ident . "_first_seen", $catID, "~UnixTimestamp");
                     if (isset($client->uptime)) $this->CreateVariable("Uptime", 1, $client->uptime, $ident . "_uptime", $catID, "~UnixTimestampTime");
                     if (isset($txrate)) $this->CreateVariable("Downloadrate", 1, $txrate, $ident . "_txrate", $catID);
@@ -1847,22 +1864,39 @@ class UniFi extends IPSModule {
                         }  
                         $ident = str_replace(":", "", $client->mac);
                         $ident = str_replace("-", "", $ident);
-                        $this->ClientArrayOnline[] = $ident;
                         $catID = $this->CreateCategoryByIdent($instance_Clients_ID, $ident . "_name", $client->name);
                         $this->CreateVariable("MAC", 3, $client->mac, $ident . "_mac", $catID);
                         $this->CreateVariable("IP", 3, $client->ip, $ident . "_ip", $catID);
                         $this->CreateVariable("Hostname", 3, $client->hostname, $ident . "_hostname", $catID);
 						if (!isset($client->tx_bytes) AND isset($client->{'wired-tx_bytes'})) $client->tx_bytes = $client->{'wired-tx_bytes'}; 
 						if (!isset($client->rx_bytes) AND isset($client->{'wired-rx_bytes'})) $client->rx_bytes = $client->{'wired-rx_bytes'};					
-						//Downloadrate berechnen
-						if (isset($client->tx_bytes)) $txrate=$this->CalculateRate("TX Bytes", $client->tx_bytes, $ident . "_txbytes", $catID);
-						//Erste danach die aktuellen Werte eintragen
-						//rx_bytes und tx_Bytes müssen float sein, sonst entstehen falsche Werte bei Großen Downloadmengen, Grenze ist 2147483647
-						$this->CreateVariable("TX Bytes", 2, $client->tx_bytes, $ident . "_txbytes", $catID);
-						$this->SendDebug("tx_bytes", $client->tx_bytes,0);
-                        $this->CreateVariable("RX Bytes", 2, $client->rx_bytes, $ident . "_rxbytes", $catID);
+                        $this->CreateVariable("TX Bytes", 1, $client->tx_bytes, $ident . "_txbytes", $catID);
+                        $this->CreateVariable("RX Bytes", 1, $client->rx_bytes, $ident . "_rxbytes", $catID);
                         $this->CreateVariable("Uptime", 1, $client->uptime, $ident . "_uptime", $catID, "~UnixTimestampTime");
-                        if (isset($txrate)) $this->CreateVariable("Downloadrate", 1, $txrate, $ident . "_txrate", $catID);
+						if (isset($client->last_seen))
+						{
+							$this->CreateVariable("Last Seen", 1, $client->last_seen, $ident . "_last_seen", $catID, "~UnixTimestamp");
+							$var_now = time();
+							$var_timedifference = ($var_now - $client->last_seen)/60; //vergangene Minuten seit letztem Kontakt
+							if ($var_timedifference <= 30)
+								$this->ClientArrayOnline[] = $ident;
+						}
+						else
+						{
+							$this->ClientArrayOnline[] = $ident;
+						}	
+						if (isset($client->_last_seen_by_usw))
+						{
+							$this->CreateVariable("Last Seen by USG", 1, $client->_last_seen_by_usw, $ident . "_last_seen_usw", $catID, "~UnixTimestamp");
+							$var_now = time();
+							$var_timedifference = ($var_now - $client->_last_seen_by_usw)/60; //vergangene Minuten seit letztem Kontakt
+							if ($var_timedifference <= 30)
+								$this->ClientArrayOnline[] = $ident;
+						}
+						else
+						{
+							$this->ClientArrayOnline[] = $ident;
+						}							
                     }
                 }
             }       
@@ -1891,10 +1925,36 @@ class UniFi extends IPSModule {
         }
     }
 
-    private function GetWLANnetworks($instance_WLAN_ID) {
+	private function GetWLANnetworks($instance_WLAN_ID) {
         if ($this->is_loggedin == true)
         {
             $wlanList = $this->list_wlanconf();
+
+            $ScriptTEXT = '<?php
+
+$controlId = $_IPS[\'VARIABLE\'];
+$value = $_IPS[\'VALUE\'];
+
+// WLAN-Name
+$start = stripos(IPS_GetName($controlId), "[") + 1;
+$end = stripos(IPS_GetName($controlId), "]");
+$wlanName = substr(IPS_GetName($controlId), $start, $end-$start);
+
+$wlanId = GetValue(IPS_GetVariableIDByName("ID", IPS_GetCategoryIDByName($wlanName, IPS_GetParent($_IPS[\'SELF\']))));
+
+if($value)
+{
+	// on
+	UniFi_SetWLANMode('.$this->InstanceID.', $wlanId."_enabledSET", TRUE); 
+}
+else
+{
+	// off
+	UniFi_SetWLANMode('.$this->InstanceID.', $wlanId."_enabledSET", FALSE);
+}
+
+?>';	
+	    $actionId = $this->CreateScriptByName("switchWlanMode", $instance_WLAN_ID, $ScriptTEXT, $SetHidden = TRUE);
 
             if (is_object($this->last_results_raw)) {
                 foreach ($this->last_results_raw->data as $wlan) {
@@ -1902,14 +1962,9 @@ class UniFi extends IPSModule {
                     $catID = $this->CreateCategoryByIdent($instance_WLAN_ID, $ident, $wlan->name);
                     $this->CreateVariable("ID", 3, $wlan->_id, $ident . "_id", $catID);
                     $this->CreateVariable("Enabled", 0, $wlan->enabled, $ident . "_enabled", $catID);
-                    $this->RegisterVariableBoolean($ident . "_enabledSET", "WLAN [".$wlan->name."] - Set Mode:", "~Switch");
+                    $this->RegisterVariableBoolean($ident . "_enabledSET", "WLAN [".$wlan->name."]", "~Switch");
                     IPS_SetInfo($this->GetIDForIdent($ident . "_enabledSET"), $ident);
-                    $ScriptTEXT_Action = '<?php UniFi_SetWLANMode('.$this->InstanceID.', "'.$ident.'_enabledSET", $_IPS["VALUE"]); ?>';
-                    $ScriptTEXT_enable = '<?php UniFi_SetWLANMode('.$this->InstanceID.', "'.$ident.'_enabledSET", TRUE); ?>';
-                    $ScriptTEXT_disable = '<?php UniFi_SetWLANMode('.$this->InstanceID.', "'.$ident.'_enabledSET", FALSE); ?>';
-                    $this->CreateScriptByName("Enable_".$wlan->name,  $this->GetIDForIdent($ident . "_enabledSET"), $ScriptTEXT_enable,  $SetHidden = TRUE);
-                    $this->CreateScriptByName("Disable_".$wlan->name, $this->GetIDForIdent($ident . "_enabledSET"), $ScriptTEXT_disable, $SetHidden = TRUE);
-                    $this->EnableAction($ident . "_enabledSET");
+                    IPS_SetVariableCustomAction($this->GetIDForIdent($ident . "_enabledSET"), $actionId);
                     $this->CreateVariable("Security", 3, $wlan->security, $ident . "_security", $catID);
                 }
             } 
